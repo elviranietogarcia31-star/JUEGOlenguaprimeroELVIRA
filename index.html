@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Lectoescritura Caligráfica</title>
+    <!-- Carga de fuente caligráfica escolar (trazo punteado) -->
+    <link href="https://fonts.googleapis.com/css2?family=Moms+Typewriter&family=Short+Stack&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Edu+SA+Beginner:wght@500;700&display=swap');
+
+        :root {
+            --bg-color: #f0f8ff;
+            --card-bg: #ffffff;
+            --primary-color: #4a90e2;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+            --text-color: #2c3e50;
+        }
+
+        body {
+            font-family: 'Short Stack', cursive, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .game-container {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .score-board {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: var(--text-color);
+        }
+
+        .image-display {
+            font-size: 100px;
+            margin: 10px 0;
+            line-height: 1;
+        }
+
+        /* Pauta de cuadrícula/línea tipo cuaderno */
+        .calligraphy-box {
+            background: linear-gradient(to bottom, 
+                transparent 0%, transparent 25%, 
+                #ffb6c1 25%, #ffb6c1 27%, 
+                transparent 27%, transparent 73%, 
+                #ffb6c1 73%, #ffb6c1 75%, 
+                transparent 75%);
+            background-size: 100% 100px;
+            padding: 20px 10px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 2px dashed #b0c4de;
+        }
+
+        /* Tipografía caligráfica escolar */
+        .calligraphy-text {
+            font-family: 'Edu SA Beginner', cursive;
+            font-size: 3.5rem;
+            letter-spacing: 4px;
+            color: #333;
+        }
+
+        .missing-letter {
+            display: inline-block;
+            width: 50px;
+            border-bottom: 4px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .options-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .btn-option {
+            font-family: 'Edu SA Beginner', cursive;
+            font-size: 2.5rem;
+            width: 65px;
+            height: 65px;
+            border: 3px solid var(--primary-color);
+            background-color: #fff;
+            color: var(--primary-color);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 0 var(--primary-color);
+        }
+
+        .btn-option:hover {
+            transform: translateY(-2px);
+            background-color: #e6f0fa;
+        }
+
+        .btn-option:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+
+        .feedback {
+            height: 30px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .feedback.correct { color: var(--success-color); }
+        .feedback.incorrect { color: var(--error-color); }
+
+        .btn-next {
+            margin-top: 20px;
+            padding: 12px 25px;
+            font-family: 'Short Stack', cursive;
+            font-size: 1.1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            display: none;
+        }
+
+        .btn-next:hover {
+            background-color: #357abd;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>¡Aprendo a Leer y Escribir! ✏️</h1>
+
+    <div class="game-container">
+        <div class="score-board">
+            Puntos: <span id="score">0</span>
+        </div>
+
+        <div class="image-display" id="emoji-display">🐱</div>
+
+        <div class="calligraphy-box">
+            <div class="calligraphy-text" id="word-display">
+                GA<span class="missing-letter">?</span>O
+            </div>
+        </div>
+
+        <div class="feedback" id="feedback-text"></div>
+
+        <div class="options-container" id="options-container">
+            <!-- Las opciones de letras se generarán dinámicamente -->
+        </div>
+
+        <button class="btn-next" id="next-btn" onclick="nextWord()">¡Siguiente palabra! ➡️</button>
+    </div>
+
+    <script>
+        // Banco de palabras adecuado para 1.º de Primaria
+        const wordsData = [
+            { word: "GATO", missingIndex: 2, emoji: "🐱", options: ["T", "P", "S", "L"] },
+            { word: "MESA", missingIndex: 0, emoji: "🪑", options: ["M", "P", "S", "L"] },
+            { word: "LUNA", missingIndex: 1, emoji: "🌙", options: ["U", "O", "A", "E"] },
+            { word: "SOL", missingIndex: 0, emoji: "☀️", options: ["S", "R", "C", "M"] },
+            { word: "PATITO", missingIndex: 2, emoji: "🦆", options: ["T", "D", "B", "P"] },
+            { word: "CASA", missingIndex: 3, emoji: "🏠", options: ["A", "O", "E", "I"] },
+            { word: "MANO", missingIndex: 2, emoji: "🖐️", options: ["N", "M", "Ñ", "L"] },
+            { word: "PELOTA", missingIndex: 1, emoji: "⚽", options: ["E", "A", "I", "U"] }
+        ];
+
+        let currentWordIndex = 0;
+        let score = 0;
+        let canAnswer = true;
+
+        function loadQuestion() {
+            canAnswer = true;
+            const current = wordsData[currentWordIndex];
+            
+            // Actualizar Emoji
+            document.getElementById('emoji-display').innerText = current.emoji;
+            
+            // Construir la palabra con la letra faltante
+            let displayHTML = "";
+            for (let i = 0; i < current.word.length; i++) {
+                if (i === current.missingIndex) {
+                    displayHTML += `<span class="missing-letter">?</span>`;
+                } else {
+                    displayHTML += current.word[i];
+                }
+            }
+            document.getElementById('word-display').innerHTML = displayHTML;
+
+            // Limpiar mensaje y botón siguiente
+            document.getElementById('feedback-text').innerText = "";
+            document.getElementById('feedback-text').className = "feedback";
+            document.getElementById('next-btn').style.display = "none";
+
+            // Mezclar y cargar opciones de botones
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = "";
+            
+            current.options.forEach(letter => {
+                const button = document.createElement('button');
+                button.className = 'btn-option';
+                button.innerText = letter;
+                button.onclick = () => checkAnswer(letter, current.word[current.missingIndex]);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedLetter, correctLetter) {
+            if (!canAnswer) return;
+
+            const feedback = document.getElementById('feedback-text');
+            
+            if (selectedLetter === correctLetter) {
+                canAnswer = false;
+                score += 10;
+                document.getElementById('score').innerText = score;
+                
+                // Mostrar palabra completa
+                const current = wordsData[currentWordIndex];
+                document.getElementById('word-display').innerText = current.word;
+                
+                feedback.innerText = "¡Muy bien! ¡Correcto! 🎉";
+                feedback.className = "feedback correct";
+                
+                document.getElementById('next-btn').style.display = "inline-block";
+            } else {
+                feedback.innerText = "¡Casi! Inténtalo de nuevo 💪";
+                feedback.className = "feedback incorrect";
+            }
+        }
+
+        function nextWord() {
+            currentWordIndex = (currentWordIndex + 1) % wordsData.length;
+            loadQuestion();
+        }
+
+        // Iniciar el juego
+        loadQuestion();
+    </script>
+</body>
+</html>
